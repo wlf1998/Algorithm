@@ -25,7 +25,9 @@ class RBT{
         void Transplant(Node *px,Node *py);
         void Delete(Node *pz);
         void DeleteFixUp(Node *pz);
+        void PreorderTreeWalk(Node *pz);
         void InorderTreeWalk(Node *pz);
+        Node *TreeMinimum(Node *pz);
         Node *GetRoot(){return this->pT_root;}
         Node *GetNil(){return this->pT_nil;}
         Node *IntervalSearch(Node* i);
@@ -46,6 +48,11 @@ RBT::~RBT(){
         delete pT_nil;
 }
 
+Node *RBT::TreeMinimum(Node *pz){
+    while(pz->pLeft != pT_nil)
+        pz = pz->pLeft;
+    return pz;
+}
 void RBT::LeftRotate(Node *px){
     Node *py = px->pRight;
     px->pRight = py->pLeft;
@@ -149,18 +156,115 @@ void RBT::InsertFixUp(Node *pz){
     pT_root->color = "Black";
 }
 
-void RBT::Transplant(Node *px, Node *py){
-
+void RBT::Transplant(Node *u, Node *v){
+    if(u->pParent == pT_nil)
+        pT_root = v;
+    else{
+        if(u == u->pParent->pLeft)
+            u->pParent->pLeft = v;
+        else 
+            u->pParent->pRight =v;
+    }
+    v->pParent = u->pParent;
 }
 
 void RBT::Delete(Node *pz){
-
+    pz->max = pz->high;
+    Node *py = pT_nil;
+    Node *px = pT_root;
+    py = pz;
+    string y_original_color;
+    y_original_color = py->color;
+    if(pz->pLeft == pT_nil){
+        px =pz->pRight;
+        Transplant(pz,pz->pRight);
+    }
+    else if(pz->pRight == pT_nil){
+        px = pz->pLeft;
+        Transplant(pz,pz->pLeft);
+    }
+    else{
+        py = TreeMinimum(pz->pRight);
+        y_original_color = py->color;
+        px = py->pRight;
+        if(py->pParent == pz)
+            px->pParent == py;
+        else{
+            Transplant(py,py->pRight);
+            py->pRight = pz->pRight;
+            py->pRight->pParent = py;
+        }
+        Transplant(px,py);
+        py->pLeft = pz->pLeft;
+        py->pLeft->pParent = py;
+        py->color = pz->color;
+    }
+    if(y_original_color == "BLACK")
+        DeleteFixUp(px);
 }
 
-void RBT::DeleteFixUp(Node *pz){
-
+void RBT::DeleteFixUp(Node *px){
+    Node *pw = NULL;
+    while(px != pT_root && px->color == "BLACK"){
+        if(px == px->pParent->pLeft){
+            pw = px->pParent->pRight;
+            if(pw->color == "RED"){
+                pw->color == "BLACK";
+                px->pParent->color == "RED";
+                LeftRotate(px->pParent);
+                pw = px->pParent->pRight;
+            }
+            if(pw->pLeft->color == "BLACK" && pw->pRight->color == "BLACK"){
+                pw->color = "RED";
+                px = px->pParent;
+            }
+            else if(pw->pRight->color == "BLACK"){
+                pw->pLeft->color = "BLACK";
+                pw->color = "RED";
+                RightRotate(pw);
+                pw = px->pParent->pRight;
+            }
+            pw->color = px->pParent->color;
+            px->pParent->color = "BLACK";
+            pw->pRight->color = "BLACK";
+            LeftRotate(px->pParent);
+            px = pT_root;
+        }
+        else if(px == px->pParent->pRight){
+            pw = px->pParent->pLeft;
+            if(pw->color == "RED"){
+                pw->color == "BLACK";
+                px->pParent->color == "RED";
+                RightRotate(px->pParent);
+                pw = px->pParent->pLeft;
+            }
+            if(pw->pRight->color == "BLACK" && pw->pLeft->color == "BLACK"){
+                pw->color = "RED";
+                px = px->pParent;
+            }
+            else if(pw->pLeft->color == "BLACK"){
+                pw->pRight->color = "BLACK";
+                pw->color = "RED";
+                LeftRotate(pw);
+                pw = px->pParent->pLeft;
+            }
+            pw->color = px->pParent->color;
+            px->pParent->color = "BLACK";
+            pw->pLeft->color = "BLACK";
+            RightRotate(px->pParent);
+            px = pT_root;
+        }
+    }
+    px->color = "BLACK";
 }
 
+void RBT::PreorderTreeWalk(Node *px){
+    if(px != pT_nil){
+        cout << "low: " <<px->low << "	high:" << px->high << "	max: " << px->max << "	color: " << px->color << endl;
+        PreorderTreeWalk(px->pLeft);
+        PreorderTreeWalk(px->pRight);
+    }
+}
 void RBT::InorderTreeWalk(Node *px){
     if(px != pT_nil){
         InorderTreeWalk(px->pLeft);
@@ -198,7 +302,11 @@ int main(void){
         ptemp[i].high = a[i][1];
         rbt.Insert(&ptemp[i]);
     }
+    cout << "InorderTreeWalk" << endl;
     rbt.InorderTreeWalk(rbt.GetRoot());
+    cout << endl;
+    cout << "PreorderTreeWalk" << endl;
+    rbt.PreorderTreeWalk(rbt.GetRoot());
     cout << endl;
 
     bool bquit = true;
