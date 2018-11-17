@@ -68,7 +68,7 @@ void RBT::LeftRotate(Node *px){
     py->pLeft = px;
     px->pParent = py;
     py->max = px->max;
-    px->max =max(px->max, max(px->pLeft->max, px->pRight->max));
+    px->max = max(px->max, max(px->pLeft->max, px->pRight->max));
 }
 
 void RBT::RightRotate(Node *py){
@@ -93,7 +93,7 @@ void RBT::Insert(Node *pz){
     Node *py = pT_nil;
     Node *px = pT_root;
     while(px != pT_nil){
-        px->max = max(pz->high, pz->max);
+        px->max = max(pz->high, px->max);
         py = px;
         if(pz->low < px->low)
             px = px->pLeft;
@@ -159,24 +159,21 @@ void RBT::InsertFixUp(Node *pz){
 void RBT::Transplant(Node *u, Node *v){
     if(u->pParent == pT_nil)
         pT_root = v;
-    else{
-        if(u == u->pParent->pLeft)
-            u->pParent->pLeft = v;
-        else 
-            u->pParent->pRight =v;
-    }
+    else if(u == u->pParent->pLeft)
+        u->pParent->pLeft = v;
+    else 
+        u->pParent->pRight = v;
     v->pParent = u->pParent;
 }
 
 void RBT::Delete(Node *pz){
-    pz->max = pz->high;
     Node *py = pT_nil;
     Node *px = pT_root;
     py = pz;
-    string y_original_color;
-    y_original_color = py->color;
+//    string y_original_color;
+//    y_original_color = py->color;
     if(pz->pLeft == pT_nil){
-        px =pz->pRight;
+        px = pz->pRight;
         Transplant(pz,pz->pRight);
     }
     else if(pz->pRight == pT_nil){
@@ -185,21 +182,21 @@ void RBT::Delete(Node *pz){
     }
     else{
         py = TreeMinimum(pz->pRight);
-        y_original_color = py->color;
+//        y_original_color = py->color;
         px = py->pRight;
         if(py->pParent == pz)
-            px->pParent == py;
+            px->pParent = py;
         else{
             Transplant(py,py->pRight);
             py->pRight = pz->pRight;
             py->pRight->pParent = py;
         }
-        Transplant(px,py);
+        Transplant(pz,py);
         py->pLeft = pz->pLeft;
         py->pLeft->pParent = py;
         py->color = pz->color;
     }
-    if(y_original_color == "BLACK")
+    if(py->color == "BLACK")  
         DeleteFixUp(px);
 }
 
@@ -322,6 +319,15 @@ int main(void){
         cout << "continue? 1 for yes or 0 for no: ";
         cin >> bquit;
     }
+    
+    rbt.Delete(&ptemp[5]);
+    cout << "InorderTreeWalk" << endl;
+    rbt.InorderTreeWalk(rbt.GetRoot());
+    cout << endl;
+    cout << "PreorderTreeWalk" << endl;
+    rbt.PreorderTreeWalk(rbt.GetRoot());
+    cout << endl;
+    getchar();
     delete []ptemp;
     system("pause");
     return 0;
